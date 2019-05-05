@@ -1,0 +1,302 @@
+--=================
+--CHAPTER 5
+--=================
+
+--Slide 4 
+--A summary query that counts unpaid invoices and calculates the total due
+SELECT COUNT(*) AS NumberOfInvoices,    SUM(InvoiceTotal - PaymentTotal - CreditTotal) AS TotalDue
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceTotal - PaymentTotal - CreditTotal > 0;
+
+
+
+--Slide 5
+--A summary query with COUNT(*), AVG, and SUM
+SELECT 'After 9/1/2015' AS SelectionDate, COUNT(*) AS NumberOfInvoices,
+    AVG(InvoiceTotal) AS AverageInvoiceAmount, SUM(InvoiceTotal) AS TotalInvoiceAmount
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceDate > '2015-09-01';
+
+
+
+--Slide 6
+--A summary query with MIN and MAX
+SELECT 'After 9/1/2015' AS SelectionDate, COUNT(*) AS NumberOfInvoices,
+    MAX(InvoiceTotal) AS HighestInvoiceTotal, MIN(InvoiceTotal) AS LowestInvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceDate > '2015-09-01';
+
+
+
+--Slide 7 
+--A summary query for non-numeric columns
+SELECT MIN(VendorName) AS FirstVendor, MAX(VendorName) AS LastVendor, 
+    COUNT(VendorName) AS NumberOfVendors
+FROM DBServer.AP.dbo.Vendors;
+
+--Alternative view with all VendorName
+SELECT MIN(VendorName) AS FirstVendor, VendorName, 
+    COUNT(VendorName) AS NumberOfVendors
+FROM DBServer.AP.dbo.Vendors
+GROUP BY VendorName;
+
+
+--Slide 8 
+--A summary query with the DISTINCT keyword (34)
+SELECT COUNT(DISTINCT VendorID) AS NumberOfVendors, COUNT(VendorID) AS NumberOfInvoices,
+    AVG(InvoiceTotal) AS AverageInvoiceAmount, SUM(InvoiceTotal) AS TotalInvoiceAmount
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceDate > '2015-09-01';
+
+--Alternative view of data (114)
+SELECT COUNT(VendorID) AS NumberOfVendors, COUNT(VendorID) AS NumberOfInvoices,
+    AVG(InvoiceTotal) AS AverageInvoiceAmount, SUM(InvoiceTotal) AS TotalInvoiceAmount
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceDate > '2015-09-01';
+
+
+
+--Slide 10 
+--A summary query that calculates the average invoice amount by vendor
+SELECT VendorID, AVG(InvoiceTotal) AS AverageInvoiceAmount
+FROM DBServer.AP.dbo.Invoices
+GROUP BY VendorID
+HAVING AVG(InvoiceTotal) > 2000
+ORDER BY AverageInvoiceAmount DESC;
+
+--Alternative view - can't include alias columns in the GROUP BY
+SELECT VendorID, AVG(InvoiceTotal) AS AverageInvoiceAmount
+FROM DBServer.AP.dbo.Invoices
+GROUP BY AverageInvoiceAmount
+HAVING AVG(InvoiceTotal) > 2000
+ORDER BY AverageInvoiceAmount DESC;
+
+
+
+--Slide 11 
+--A summary query that counts the number of invoices by vendor
+SELECT VendorID, COUNT(*) AS InvoiceQty
+FROM DBServer.AP.dbo.Invoices
+GROUP BY VendorID;
+
+
+
+--Slide 12 
+--A summary query that groups by two columns
+SELECT VendorState, VendorCity, COUNT(*) AS InvoiceQty,AVG(InvoiceTotal) AS InvoiceAvg
+FROM DBServer.AP.dbo.Invoices 
+JOIN DBServer.AP.dbo.Vendors
+    ON Invoices.VendorID = Vendors.VendorID
+GROUP BY VendorState, VendorCity
+ORDER BY VendorState, VendorCity;
+
+
+
+--Slide 13 
+--The same summary query with a HAVING clause (The order of KEY words is specific)
+SELECT VendorState, VendorCity, COUNT(*) AS InvoiceQty,
+    AVG(InvoiceTotal) AS InvoiceAvg
+FROM DBServer.AP.dbo.Invoices 
+JOIN DBServer.AP.dbo.Vendors
+    ON Invoices.VendorID = Vendors.VendorID
+GROUP BY VendorState, VendorCity
+HAVING COUNT(*) >= 2
+ORDER BY VendorState, VendorCity;
+
+
+
+--Slide 14 
+--A summary query with a search condition in the HAVING clause
+SELECT VendorName, COUNT(*) AS InvoiceQty,
+    AVG(InvoiceTotal) AS InvoiceAvg
+FROM DBServer.AP.dbo.Vendors 
+JOIN DBServer.AP.dbo.Invoices
+    ON Vendors.VendorID = Invoices.VendorID
+GROUP BY VendorName
+HAVING AVG(InvoiceTotal) > 500
+ORDER BY InvoiceQty DESC;
+
+
+
+--Slide 15 
+--A summary query with a search condition in the WHERE clause
+SELECT VendorName, COUNT(*) AS InvoiceQty,
+    AVG(InvoiceTotal) AS InvoiceAvg
+FROM DBServer.AP.dbo.Vendors 
+JOIN DBServer.AP.dbo.Invoices
+    ON Vendors.VendorID = Invoices.VendorID
+WHERE InvoiceTotal > 500
+GROUP BY VendorName
+ORDER BY InvoiceQty DESC;
+
+
+
+--Slide 16
+--A summary query with a compound condition in the HAVING clause
+SELECT InvoiceDate, COUNT(*) AS InvoiceQty, SUM(InvoiceTotal) AS InvoiceSum
+FROM DBServer.AP.dbo.Invoices
+GROUP BY InvoiceDate
+HAVING InvoiceDate BETWEEN '2016-01-01' AND '2016-01-31'
+   AND COUNT(*) > 1
+   AND SUM(InvoiceTotal) > 100
+ORDER BY InvoiceDate DESC;
+
+--Alternative view
+SELECT InvoiceDate, COUNT(*) AS InvoiceQty, SUM(InvoiceTotal) AS InvoiceSum
+FROM DBServer.AP.dbo.Invoices
+GROUP BY InvoiceDate
+HAVING InvoiceDate BETWEEN '2016-01-01' AND '2016-01-31'
+   --AND COUNT(*) > 1
+   --AND SUM(InvoiceTotal) > 100
+ORDER BY InvoiceDate DESC;
+
+
+
+-- Slide 17 
+--The same summary query with a WHERE clause
+SELECT InvoiceDate, COUNT(*) AS InvoiceQty, SUM(InvoiceTotal) AS InvoiceSum
+FROM DBServer.AP.dbo.Invoices
+WHERE InvoiceDate BETWEEN '2016-01-01' AND '2016-01-31'
+GROUP BY InvoiceDate
+HAVING COUNT(*) > 1
+   AND SUM(InvoiceTotal) > 100
+ORDER BY InvoiceDate DESC;
+
+
+
+-- Slide 18
+--A summary query with a final summary row
+SELECT VendorID, COUNT(*) AS InvoiceCount,
+    SUM(InvoiceTotal) AS InvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+GROUP BY VendorID WITH ROLLUP;
+
+--Alternative view
+SELECT VendorID, COUNT(*) AS InvoiceCount,
+    SUM(InvoiceTotal) AS InvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+GROUP BY VendorID;
+
+
+--Another way to code the GROUP BY clause (SQL Server 2008 or later)
+SELECT VendorID, COUNT(*) AS InvoiceCount,
+    SUM(InvoiceTotal) AS InvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+GROUP BY ROLLUP(VendorID);
+
+
+
+-- Slide 19
+--A summary query with a summary row for each grouping level
+SELECT VendorState, VendorCity, COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY VendorState, VendorCity WITH ROLLUP
+ORDER BY VendorState DESC, VendorCity DESC;
+
+
+--Another way to code the GROUP BY clause (SQL Server 2008 or later)
+SELECT VendorState, VendorCity, COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY ROLLUP(VendorState, VendorCity);
+
+
+
+-- Slide 20
+--A summary query with a final summary row
+SELECT VendorID, COUNT(*) AS InvoiceCount,
+    SUM(InvoiceTotal) AS InvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+GROUP BY VendorID WITH CUBE;
+
+
+--Another way to code the GROUP BY clause
+SELECT VendorID, COUNT(*) AS InvoiceCount,
+    SUM(InvoiceTotal) AS InvoiceTotal
+FROM DBServer.AP.dbo.Invoices
+GROUP BY CUBE(VendorID);
+
+
+
+-- Slide 21
+--A summary query with a summary row for each set of groups
+SELECT VendorState, VendorCity, COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY VendorState, VendorCity WITH CUBE
+ORDER BY VendorState DESC, VendorCity DESC;
+
+--Compare
+SELECT VendorState, VendorCity, COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY VendorState, VendorCity WITH ROLLUP
+ORDER BY VendorState DESC, VendorCity DESC;
+
+
+-- Slide 22
+--A summary query with two groups
+SELECT VendorState, VendorCity, COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY GROUPING SETS(VendorState, VendorCity)
+ORDER BY VendorState DESC, VendorCity DESC;
+
+--Alternative
+SELECT VendorState,COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY GROUPING SETS(VendorState)
+ORDER BY VendorState DESC;
+
+
+-- Slide 23
+--A summary query with a composite grouping
+SELECT VendorState, VendorCity, VendorZipCode, 
+       COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY GROUPING SETS((VendorState, VendorCity), VendorZipCode, ())
+ORDER BY VendorState DESC, VendorCity DESC;
+
+
+
+-- Slide 24
+--A summary query with a group that uses the ROLLUP operator
+SELECT VendorState, VendorCity, VendorZipCode, 
+       COUNT(*) AS QtyVendors
+FROM DBServer.AP.dbo.Vendors
+WHERE VendorState IN ('IA', 'NJ')
+GROUP BY GROUPING SETS(ROLLUP(VendorState, VendorCity),
+                       VendorZipCode)
+
+
+-- Slide 25
+--A query that groups the summary data by date
+SELECT InvoiceNumber, InvoiceDate, InvoiceTotal,
+  SUM(InvoiceTotal) OVER (PARTITION BY InvoiceDate) AS DateTotal,
+  COUNT(InvoiceTotal) OVER (PARTITION BY InvoiceDate) AS DateCount,
+  AVG(InvoiceTotal) OVER (PARTITION BY InvoiceDate) AS DateAvg
+FROM DBServer.AP.dbo.Invoices;
+
+
+
+-- Slide 26
+--A query that calculates a cumulative total and moving average
+SELECT InvoiceNumber, InvoiceDate, InvoiceTotal,
+    SUM(InvoiceTotal) OVER (ORDER BY InvoiceDate) AS CumTotal,
+    COUNT(InvoiceTotal) OVER (ORDER BY InvoiceDate) AS Count,
+    AVG(InvoiceTotal) OVER (ORDER BY InvoiceDate) AS MovingAvg
+FROM DBServer.AP.dbo.Invoices;
+
+
+
+-- Slide 27
+--The same query grouped by TermsID
+SELECT InvoiceNumber, TermsID, InvoiceDate, InvoiceTotal,
+    SUM(InvoiceTotal) OVER (PARTITION BY TermsID ORDER BY InvoiceDate) AS CumTotal,
+    COUNT(InvoiceTotal) OVER (PARTITION BY TermsID ORDER BY InvoiceDate) AS Count,
+    AVG(InvoiceTotal) OVER (PARTITION BY TermsID ORDER BY InvoiceDate) AS MovingAvg
+FROM DBServer.AP.dbo.Invoices;
+
